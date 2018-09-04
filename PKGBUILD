@@ -48,7 +48,7 @@ build() {
   runhaskell Setup configure -O --prefix=/usr --enable-executable-dynamic --disable-library-vanilla \
     --docdir="/usr/share/doc/$pkgname" \
     -fconcurrentoutput -f-torrentparser \
-    -f-androidsplice -f-android -fproduction -fpairing -f-webapp \
+    -f-androidsplice -f-android -fproduction -f-pairing -f-webapp \
     -f-assistant -f-webdav -f-s3 -f-benchmark -fdbus -fmagicmime
   runhaskell Setup build
 }
