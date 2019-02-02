@@ -3,8 +3,8 @@
 # Contributor: Arch Haskell Team <arch-haskell@haskell.org>
 
 pkgname=git-annex
-pkgver=6.20180807
-pkgrel=22
+pkgver=7.20190129
+pkgrel=1
 pkgdesc="Manage files with git, without checking their contents into git"
 url="http://git-annex.branchable.com/"
 license=("AGPL3")
@@ -28,19 +28,11 @@ depends=('git' 'lsof' 'rsync' 'ghc-libs' 'haskell-aeson' 'haskell-async'
          'haskell-unordered-containers' 'haskell-utf8-string' 'haskell-uuid' 'haskell-vector'
         )
 makedepends=('chrpath' 'ghc' 'haskell-data-default' 'haskell-ifelse' 'haskell-unix-compat')
-source=("git+https://git.joeyh.name/git/git-annex.git#tag=$pkgver"
-        "0001-remove-unused-file.patch"
-        "0002-optional-build-assistant-and-other-small-cabal-refin.patch"
-       )
-sha512sums=('SKIP'
-            '043a19e7ee2425b77ab5b62235634cb90a77588dbc14964d41fe42b5e61ae5fd0b749a29e8f482d96761a1d1c409d8c68f90fd09adad466a0e9b38e0e4364c99'
-            'b63302dc359d79aee2d14471b02f54a2e1e9838a7e73401e9e5ab3a72e720ab6dd4af02f25a8be93938db419ea7a8f00d36b8dc2c5ba468a66bdd647583287f8'
-           )
+source=("git+https://git.joeyh.name/git/git-annex.git#tag=$pkgver")
+sha512sums=('SKIP')
 
 prepare() {
     cd git-annex
-    patch -p1 -i "${srcdir}/../0001-remove-unused-file.patch"
-    patch -p1 -i "${srcdir}/../0002-optional-build-assistant-and-other-small-cabal-refin.patch"
 }
 build() {
   cd git-annex
