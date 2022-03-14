@@ -1,6 +1,14 @@
-# $Id$
-# Maintainer: Felix Yan <felixonmars@archlinux.org>
-# Contributor: Arch Haskell Team <arch-haskell@haskell.org>
+# There are 2 most popular tools for build haskell projects: cabal and stack.
+# Their entry points is Setup.hs and stack.yaml correspondingly.
+
+# from  https://wiki.archlinux.org/title/Haskell:
+# GHC does not provide stable ABI, so usage of shared libraries is difficult.
+# archlinux package maintainers decide to support dynamic versions for haskell packages and update/recompile it every time, when GHC changes.
+
+# AUR packages seems prefer static bilding - compile all dependencies inside result binary to avoid of troubles with ABI.
+# This package use dynamic way (for ability to reuse libraries), so:
+# 1. There are a lot of dependencies.
+# 2. Possibly need to rebuild package after GHC changes.
 
 pkgname=git-annex
 pkgver=7.20190129
@@ -21,7 +29,7 @@ depends=('git' 'lsof' 'rsync' 'ghc-libs' 'haskell-aeson' 'haskell-async'
          'haskell-network' 'haskell-network-info'
          'haskell-network-uri' 'haskell-old-locale' 'haskell-optparse-applicative'
          'haskell-path-pieces' 'haskell-persistent' 'haskell-persistent-sqlite'
-         'haskell-persistent-template' 'haskell-quickcheck' 'haskell-random' 'haskell-regex-tdfa'
+         'haskell-quickcheck' 'haskell-random' 'haskell-regex-tdfa'
          'haskell-resourcet' 'haskell-safesemaphore' 'haskell-sandi' 'haskell-securemem'
          'haskell-socks' 'haskell-split' 'haskell-stm-chans' 'haskell-tagsoup'
          'haskell-tasty' 'haskell-tasty-hunit' 'haskell-tasty-quickcheck' 'haskell-tasty-rerun'
@@ -33,22 +41,36 @@ sha512sums=('SKIP')
 
 prepare() {
     cd git-annex
+    uusi -d persistent-template git-annex.cabal
+    sed -i 's/MIN_VERSION_persistent_template/MIN_VERSION_persistent/' Database/ContentIdentifier.hs Database/Export.hs Database/Fsck.hs Database/Keys/SQL.hs
 }
 build() {
   cd git-annex
-
+  # build flags from git-annex/BuildFlags.hs
+  _opt_flags=(
+	-Assistant
+	-Webapp
+	-Pairing #https://git-annex.branchable.com/assistant/local_pairing_walkthrough/
+	-S3
+	-WebDAV
+	-FsEvents # MacOS analog of inotify
+	-DBus
+	-DesktopNotify
+	-TorrentParser
+	-benchmark # present only in git-annex/stack.yaml
+  
+  )
   runhaskell Setup configure -O --prefix=/usr --enable-executable-dynamic --disable-library-vanilla \
     --docdir="/usr/share/doc/$pkgname" \
-    -fconcurrentoutput -f-torrentparser \
-    -f-androidsplice -f-android -fproduction -f-pairing -f-webapp \
-    -f-assistant -f-webdav -f-s3 -f-benchmark -fdbus -fmagicmime
-  runhaskell Setup build
+
+    -f-androidsplice -f-android -fproduction \
+      -f-benchmark
+    make GHC="ghc -dynamic" BUILDER=./Setup BUILDEROPTIONS=$MAKEFLAGS
 }
 
 package() {
   cd git-annex
-  runhaskell Setup copy --destdir="$pkgdir"
-  make GHC="ghc -dynamic" BUILDER=true DESTDIR="$pkgdir" -j1 install-misc
+  make GHC="ghc -dynamic" BUILDER=./Setup DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/share/doc/git-annex/COPYRIGHT
   rmdir "$pkgdir"/usr/share/doc/git-annex "$pkgdir"/usr/share/doc
